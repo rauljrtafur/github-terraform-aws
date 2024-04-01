@@ -2,15 +2,14 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "~> 3.0"
+      version = "~> 5.0"
     }
   }
 }
 
+# Configure the AWS Provider
 provider "aws" {
-  region     = "us-east-1"
-  access_key = "AKIAW3MEDYFJP6WLPKHW"
-  secret_key = "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"
+  region = "us-east-1"
 }
 
 
@@ -22,7 +21,7 @@ resource "aws_ssm_parameter" "foo" {
 }
 
 resource "aws_ssm_parameter" "foo2" {
-  name  = "foo"
+  name  = "foo2"
   type  = "String"
   value = "bar"
 
