@@ -26,10 +26,9 @@ resource "aws_ssm_parameter" "foo" {
 
 }
 
-resource "aws_s3_bucket" "image-generate" {
-  bucket = "image-generate-buckets3"
+resource "aws_ssm_parameter" "foo2" {
+  name  = "foo"
+  type  = "String"
+  value = "bar"
 
-  tags = {
-    Environment = "Prod"
-  }
 }
