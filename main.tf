@@ -6,9 +6,9 @@ terraform {
     }
   }
   backend "s3" {
-    bucket = "github-terraform-aws-dev" # change to name of your bucket
-    region = "us-west-1"                # change to your region
-    key    = "terraform.tfstate"
+    # bucket = "github-terraform-aws-dev" # change to name of your bucket
+    # region = "us-west-1"                # change to your region
+    # key    = "terraform.tfstate"
   }
 }
 
