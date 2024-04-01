@@ -27,7 +27,7 @@ resource "aws_ssm_parameter" "foo" {
 }
 
 resource "aws_s3_bucket" "image-generate" {
-  bucket = "image-generate"
+  bucket = "image-generate-buckets3"
 
   tags = {
     Environment = "Prod"
