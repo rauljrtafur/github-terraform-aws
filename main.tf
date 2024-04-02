@@ -10,6 +10,8 @@ terraform {
 # Configure the AWS Provider
 provider "aws" {
   region = "us-east-1"
+  access_key = "AKIAW3MEDYFJK7BYYGEP"
+  secret_key = "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"
 }
 
 
@@ -27,10 +29,17 @@ resource "aws_ssm_parameter" "foo2" {
 
 }
 
-resource "aws_s3_bucket" "image-generate" {
-  bucket = "image-generate-buckets3"
+module "s3_bucket" {
+  source = "terraform-aws-modules/s3-bucket/aws"
 
-  tags = {
-    Environment = "Prod"
+  bucket = "image-generate-buckets3"
+  acl    = "private"
+
+  control_object_ownership = true
+  object_ownership         = "ObjectWriter"
+
+  versioning = {
+    enabled = true
   }
 }
+
