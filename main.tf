@@ -30,7 +30,7 @@ resource "aws_ssm_parameter" "foo2" {
 module "s3_bucket" {
   source = "terraform-aws-modules/s3-bucket/aws"
 
-  bucket = "github-terraform-aws-dev"
+  bucket = "image-generate-buckets3"
   acl    = "private"
 
   control_object_ownership = true
