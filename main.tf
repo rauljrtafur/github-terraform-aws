@@ -9,24 +9,9 @@ terraform {
 
 # Configure the AWS Provider
 provider "aws" {
-  region = "us-east-1"
+  region     = "us-east-1"
   access_key = "AKIAW3MEDYFJK7BYYGEP"
   secret_key = "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"
-}
-
-
-resource "aws_ssm_parameter" "foo" {
-  name  = "foo"
-  type  = "String"
-  value = "bar"
-
-}
-
-resource "aws_ssm_parameter" "foo2" {
-  name  = "foo2"
-  type  = "String"
-  value = "bar"
-
 }
 
 module "s3_bucket" {
@@ -43,6 +28,20 @@ module "s3_bucket" {
   }
 }
 
+resource "aws_dynamodb_table" "profile" {
+  name           = "profile"
+  billing_mode   = "PROVISIONED"
+  read_capacity  = 1
+  write_capacity = 1
+  hash_key       = "ProfileId"
+
+  attribute {
+    name = "ProfileId"
+    type = "S"
+  }
+
+}
+
 data "archive_file" "lambda" {
   type        = "zip"
   source_dir  = "${path.module}/python/"
@@ -52,14 +51,80 @@ data "archive_file" "lambda" {
 module "lambda_function" {
   source = "terraform-aws-modules/lambda/aws"
 
-  function_name = "my-lambda1"
-  description   = "My awesome lambda function"
+  function_name = "imageGenerator-lambda"
+  description   = "My lambda function"
   handler       = "lambda_function.lambda_handler"
-  runtime       = "python3.8"
+  runtime       = "python3.9"
 
   source_path = "${path.module}/python/"
 
   tags = {
     Name = "my-lambda1"
   }
+}
+
+
+
+
+resource "aws_apigatewayv2_api" "api" {
+  name          = "ImageGenerator-API2"
+  protocol_type = "HTTP"
+
+  cors_configuration {
+    allow_origins  = ["*"]
+    allow_methods  = ["*"]
+    allow_headers  = ["*"]
+    expose_headers = ["*"]
+  }
+}
+
+
+resource "aws_apigatewayv2_stage" "apigateway" {
+  api_id      = aws_apigatewayv2_api.api.id
+  name        = "prod"
+  auto_deploy = true
+
+  access_log_settings {
+    destination_arn = aws_cloudwatch_log_group.api_gw.arn
+
+    format = jsonencode({
+      requestId               = "$context.requestId"
+      sourceIp                = "$context.identity.sourceIp"
+      requestTime             = "$context.requestTime"
+      protocol                = "$context.protocol"
+      httpMethod              = "$context.httpMethod"
+      resourcePath            = "$context.resourcePath"
+      routeKey                = "$context.routeKey"
+      status                  = "$context.status"
+      responseLength          = "$context.responseLength"
+      integrationErrorMessage = "$context.integrationErrorMessage"
+      }
+    )
+  }
+}
+
+resource "aws_apigatewayv2_integration" "lambda" {
+  for_each           = local.routes
+  api_id             = aws_apigatewayv2_api.api.id
+  integration_uri    = module.lambda_function.lambda_function_arn
+  integration_type   = "AWS_PROXY"
+  integration_method = "POST"
+}
+
+resource "aws_apigatewayv2_route" "default_route" {
+  api_id    = aws_apigatewayv2_api.api.id
+  route_key = "$default"
+  target    = "integrations/${aws_apigatewayv2_integration.lambda["index"].id}"
+}
+
+resource "aws_apigatewayv2_route" "lambda" {
+  for_each  = local.routes
+  api_id    = aws_apigatewayv2_api.api.id
+  route_key = "${each.value.http_verb} ${each.value.path}"
+  target    = "integrations/${aws_apigatewayv2_integration.lambda[each.value.name].id}"
+}
+
+resource "aws_cloudwatch_log_group" "api_gw" {
+  name              = "/aws/api_gw/${aws_apigatewayv2_api.api.name}"
+  retention_in_days = 1
 }
