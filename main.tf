@@ -64,8 +64,6 @@ module "lambda_function" {
 }
 
 
-
-
 resource "aws_apigatewayv2_api" "api" {
   name          = "ImageGenerator-API2"
   protocol_type = "HTTP"
