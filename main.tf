@@ -55,6 +55,9 @@ module "lambda_function" {
   description   = "My lambda function"
   handler       = "lambda_function.lambda_handler"
   runtime       = "python3.9"
+  memory_size   = 512
+  timeout       = 15
+  ephemeral_storage_size = 1024
 
   source_path = "${path.module}/python/"
 
