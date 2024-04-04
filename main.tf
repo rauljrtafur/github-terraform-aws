@@ -9,7 +9,7 @@ terraform {
 
 # Configure the AWS Provider
 provider "aws" {
-  region     = "us-east-1"
+  region     = var.aws_region
   access_key = "AKIAW3MEDYFJK7BYYGEP"
   secret_key = "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"
 }
@@ -51,13 +51,14 @@ data "archive_file" "lambda" {
 module "lambda_function" {
   source = "terraform-aws-modules/lambda/aws"
 
-  function_name = "imageGenerator-lambda"
-  description   = "My lambda function"
-  handler       = "lambda_function.lambda_handler"
-  runtime       = "python3.9"
-  memory_size   = 512
-  timeout       = 15
+  function_name          = "imageGenerator-lambda"
+  description            = "My lambda function"
+  handler                = "lambda_function.lambda_handler"
+  runtime                = "python3.9"
+  memory_size            = 512
+  timeout                = 15
   ephemeral_storage_size = 1024
+  layers                 = [var.layer_lambda_pillow]
 
   source_path = "${path.module}/python/"
 
@@ -82,7 +83,7 @@ resource "aws_apigatewayv2_api" "api" {
 
 resource "aws_apigatewayv2_stage" "apigateway" {
   api_id      = aws_apigatewayv2_api.api.id
-  name        = "prod"
+  name        = "$default"
   auto_deploy = true
 
   access_log_settings {
