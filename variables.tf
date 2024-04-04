@@ -3,6 +3,11 @@ variable "aws_region" {
   default = "us-east-1"
 }
 
+variable "layer_lambda_pillow" {
+  type    = string
+  default = "arn:aws:lambda:us-east-1:770693421928:layer:Klayers-p39-pillow:1"
+}
+
 locals {
   routes = {
     "index" : {
